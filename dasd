@@ -1,0 +1,491 @@
+[1mdiff --git a/.gitignore b/.gitignore[m
+[1mdeleted file mode 100644[m
+[1mindex 2eea525..0000000[m
+[1m--- a/.gitignore[m
+[1m+++ /dev/null[m
+[36m@@ -1 +0,0 @@[m
+[31m-.env[m
+\ No newline at end of file[m
+[1mdiff --git a/README.md b/README.md[m
+[1mnew file mode 100644[m
+[1mindex 0000000..db9a4e2[m
+[1m--- /dev/null[m
+[1m+++ b/README.md[m
+[36m@@ -0,0 +1,2 @@[m
+[32m+[m[32m# Automated-emails[m
+[32m+[m[32mAn app that reads user names, email addresses, and interests from an Excel file and sends an email to each user with news feeds about the user's interest at a specific time.[m
+[1mdiff --git a/__pycache__/email.cpython-311.pyc b/__pycache__/email.cpython-311.pyc[m
+[1mdeleted file mode 100644[m
+[1mindex 6e7a01a..0000000[m
+Binary files a/__pycache__/email.cpython-311.pyc and /dev/null differ
+[1mdiff --git a/__pycache__/news.cpython-311.pyc b/__pycache__/news.cpython-311.pyc[m
+[1mdeleted file mode 100644[m
+[1mindex bd0776b..0000000[m
+Binary files a/__pycache__/news.cpython-311.pyc and /dev/null differ
+[1mdiff --git a/design.txt b/design.txt[m
+[1mdeleted file mode 100644[m
+[1mindex 43f5a78..0000000[m
+[1m--- a/design.txt[m
+[1m+++ /dev/null[m
+[36m@@ -1,15 +0,0 @@[m
+[31m-Title: Automated Emails[m
+[31m-Description: An app that reads user names, email addresses, and interests from an Excel file and sends an email to each user[m
+[31m-with news feeds about the user's interest every morning.[m
+[31m-Objects: ExcelFile:[m
+[31m-            filepath[m
+[31m-            get_data()[m
+[31m-         Email:[m
+[31m-             sender[m
+[31m-             receiver[m
+[31m-             subject[m
+[31m-             body[m
+[31m-             send()[m
+[31m-         NewsFeed:[m
+[31m-            data[m
+[31m-            get()[m
+[1mdiff --git a/main.py b/main.py[m
+[1mdeleted file mode 100644[m
+[1mindex 0d1c75c..0000000[m
+[1m--- a/main.py[m
+[1m+++ /dev/null[m
+[36m@@ -1,41 +0,0 @@[m
+[31m-import os[m
+[31m-import yagmail[m
+[31m-import pandas[m
+[31m-import datetime[m
+[31m-import time[m
+[31m-[m
+[31m-from dotenv import load_dotenv[m
+[31m-from news import NewsFeed[m
+[31m-[m
+[31m-load_dotenv()[m
+[31m-[m
+[31m-user = os.environ.get('EMAIL')[m
+[31m-password = os.environ.get('APP_PASSWORD')[m
+[31m-[m
+[31m-# Send the email autoamtically at a specific time[m
+[31m-def send_email():[m
+[31m-    current_date=(datetime.datetime.now()).strftime('%Y-%m-%d')[m
+[31m-[m
+[31m-            # current_date - 1; days=1(value of how many days behind from todays date)[m
+[31m-    start_date = datetime.datetime.now() - datetime.timedelta(days=1)[m
+[31m-    news_feed = NewsFeed({row['interest']}, [m
+[31m-                                from_date=start_date, [m
+[31m-                                to_date=current_date, [m
+[31m-                                language='en')[m
+[31m-    email = yagmail.SMTP(user=user,password=password)[m
+[31m-    email.send(to=row['email'],[m
+[31m-                        subject=f"Your {row['interest']} news for today!",[m
+[31m-                        contents=f"Hi {row['name']},\n See what's on about {row['interest']} today.\n\n {news_feed.get()}\nRegards")[m
+[31m-[m
+[31m-while True:[m
+[31m-    if datetime.datetime.now().hour == 20 and datetime.datetime.now().minute == 48:[m
+[31m-        df = pandas.read_excel("people.xlsx")[m
+[31m-[m
+[31m-        # iterate through the excel file and access the interest, email and name[m
+[31m-        for index, row in df.iterrows():[m
+[31m-            # print(row[1])[m
+[31m-            send_email()[m
+[31m-[m
+[31m-    time.sleep(60)[m
+[31m-    [m
+[31m-[m
+[1mdiff --git a/news.py b/news.py[m
+[1mdeleted file mode 100644[m
+[1mindex 2fcd152..0000000[m
+[1m--- a/news.py[m
+[1m+++ /dev/null[m
+[36m@@ -1,54 +0,0 @@[m
+[31m-import os[m
+[31m-import requests[m
+[31m-[m
+[31m-from pprint import pprint[m
+[31m-from dotenv import load_dotenv[m
+[31m-[m
+[31m-load_dotenv()[m
+[31m-[m
+[31m-class NewsFeed:[m
+[31m-    """Representing multiple news titles and links as a single string"""[m
+[31m-[m
+[31m-    base_url = "https://newsapi.org/v2/everything?"[m
+[31m-    [m
+[31m-    api_key = os.environ.get('API_KEY')[m
+[31m-[m
+[31m-    def __init__(self, interest, from_date, to_date,language):[m
+[31m-        self.interest = interest[m
+[31m-        self.from_date = from_date[m
+[31m-        self.to_date = to_date[m
+[31m-        self.language = language[m
+[31m-[m
+[31m-    def get(self):[m
+[31m-        url = self._build_url()[m
+[31m-[m
+[31m-        articles = self._get_articles(url)[m
+[31m-[m
+[31m-        email_body = ''[m
+[31m-        for article in articles:        [m
+[31m-            email_body = email_body + article['title'] + "\n" + article['url'] + "\n\n"[m
+[31m-[m
+[31m-        return email_body[m
+[31m-[m
+[31m-    def _get_articles(self, url):[m
+[31m-        response = requests.get(url)[m
+[31m-        # convert json to dictionary[m
+[31m-        content = response.json()[m
+[31m-        #print(content)[m
+[31m-        articles = content['articles'][m
+[31m-        return articles[m
+[31m-[m
+[31m-    def _build_url(self):[m
+[31m-        url = f"{self.base_url}"\[m
+[31m-              f"qInTitle={self.interest}&"\[m
+[31m-              f"from={self.from_date}&"\[m
+[31m-              f"to={self.to_date}&"\[m
+[31m-              f"sortBy=popularity&"\[m
+[31m-              f"language={self.language}&"\[m
+[31m-              f"apiKey={self.api_key}"[m
+[31m-              [m
+[31m-        return url[m
+[31m-[m
+[31m-if __name__ == "__main__":    [m
+[31m-    news_feed = NewsFeed(interest='soccer',from_date='2023-09-06',to_date='2023-09-07',language='en')[m
+[31m-    print(news_feed.get())[m
+\ No newline at end of file[m
+[1mdiff --git a/node_modules/.package-lock.json b/node_modules/.package-lock.json[m
+[1mdeleted file mode 100644[m
+[1mindex 7a01b14..0000000[m
+[1m--- a/node_modules/.package-lock.json[m
+[1m+++ /dev/null[m
+[36m@@ -1,18 +0,0 @@[m
+[31m-{[m
+[31m-  "name": "App-7-Automated-Emails",[m
+[31m-  "lockfileVersion": 3,[m
+[31m-  "requires": true,[m
+[31m-  "packages": {[m
+[31m-    "node_modules/dotenv": {[m
+[31m-      "version": "16.3.1",[m
+[31m-      "resolved": "https://registry.npmjs.org/dotenv/-/dotenv-16.3.1.tgz",[m
+[31m-      "integrity": "sha512-IPzF4w4/Rd94bA9imS68tZBaYyBWSCE47V1RGuMrB94iyTOIEwRmVL2x/4An+6mETpLrKJ5hQkB8W4kFAadeIQ==",[m
+[31m-      "engines": {[m
+[31m-        "node": ">=12"[m
+[31m-      },[m
+[31m-      "funding": {[m
+[31m-        "url": "https://github.com/motdotla/dotenv?sponsor=1"[m
+[31m-      }[m
+[31m-    }[m
+[31m-  }[m
+[31m-}[m
+[1mdiff --git a/node_modules/dotenv/CHANGELOG.md b/node_modules/dotenv/CHANGELOG.md[m
+[1mdeleted file mode 100644[m
+[1mindex c15fd30..0000000[m
+[1m--- a/node_modules/dotenv/CHANGELOG.md[m
+[1m+++ /dev/null[m
+[36m@@ -1,431 +0,0 @@[m
+[31m-# Changelog[m
+[31m-[m
+[31m-All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.[m
+[31m-[m
+[31m-## [Unreleased](https://github.com/motdotla/dotenv/compare/v16.3.1...master)[m
+[31m-[m
+[31m-## [16.3.1](https://github.com/motdotla/dotenv/compare/v16.3.0...v16.3.1) (2023-06-17)[m
+[31m-[m
+[31m-### Added[m
+[31m-[m
+[31m-- Add missing type definitions for `processEnv` and `DOTENV_KEY` options. [#756](https://github.com/motdotla/dotenv/pull/756)[m
+[31m-[m
+[31m-## [16.3.0](https://github.com/motdotla/dotenv/compare/v16.2.0...v16.3.0) (2023-06-16)[m
+[31m-[m
+[31m-### Added[m
+[31m-[m
+[31m-- Optionally pass `DOTENV_KEY` to options rather than relying on `process.env.DOTENV_KEY`. Defaults to `process.env.DOTENV_KEY` [#754](https://github.com/motdotla/dotenv/pull/754)[m
+[31m-[m
+[31m-## [16.2.0](https://github.com/motdotla/dotenv/compare/v16.1.4...v16.2.0) (2023-06-15)[m
+[31m-[m
+[31m-### Added[m
+[31m-[m
+[31m-- Optionally write to your own target object rather than `process.env`. Defaults to `process.env`. [#753](https://github.com/motdotla/dotenv/pull/753)[m
+[31m-- Add import type URL to types file [#751](https://github.com/motdotla/dotenv/pull/751)[m
+[31m-[m
+[31m-## [16.1.4](https://github.com/motdotla/dotenv/compare/v16.1.3...v16.1.4) (2023-06-04)[m
+[31m-[m
+[31m-### Added[m
+[31m-[m
+[31m-- Added `.github/` to `.npmignore` [#747](https://github.com/motdotla/dotenv/pull/747)[m
+[31m-[m
+[31m-## [16.1.3](https://github.com/motdotla/dotenv/compare/v16.1.2...v16.1.3) (2023-05-31)[m
+[31m-[m
+[31m-### Removed[m
+[31m-[m
+[31m-- Removed `browser` keys for `path`, `os`, and `crypto` in package.json. These were set to false incorrectly as of 16.1. Instead, if using dotenv on the front-end make sure to include polyfills for `path`, `os`, and `crypto`. [node-polyfill-webpack-plugin](https://github.com/Richienb/node-polyfill-webpack-plugin) provides these.[m
+[31m-[m
+[31m-## [16.1.2](https://github.com/motdotla/dotenv/compare/v16.1.1...v16.1.2) (2023-05-31)[m
+[31m-[m
+[31m-### Changed[m
+[31m-[m
+[31m-- Exposed private function `_configDotenv` as `configDotenv`. [#744](https://github.com/motdotla/dotenv/pull/744)[m
+[31m-[m
+[31m-## [16.1.1](https://github.com/motdotla/dotenv/compare/v16.1.0...v16.1.1) (2023-05-30)[m
+[31m-[m
+[31m-### Added[m
+[31m-[m
+[31m-- Added type definition for `decrypt` function[m
+[31m-[m
+[31m-### Changed[m
+[31m-[m
+[31m-- Fixed `{crypto: false}` in `packageJson.browser`[m
+[31m-[m
+[31m-## [16.1.0](https://github.com/motdotla/dotenv/compare/v16.0.3...v16.1.0) (2023-05-30)[m
+[31m-[m
+[31m-### Added[m
+[31m-[m
+[31m-- Add `populate` convenience method [#733](https://github.com/motdotla/dotenv/pull/733)[m
+[31m-- Accept URL as path option [#720](https://github.com/motdotla/dotenv/pull/720)[m
+[31m-- Add dotenv to `npm fund` command[m
+[31m-- Spanish language README [#698](https://github.com/motdotla/dotenv/pull/698)[m
+[31m-- Add `.env.vault` support. 🎉 ([#730](https://github.com/motdotla/dotenv/pull/730))[m
+[31m-[m
+[31m-ℹ️ `.env.vault` extends the `.env` file format standard with a localized encrypted vault file. Package it securely with your production code deploys. It's cloud agnostic so that you can deploy your secrets anywhere – without [risky third-party integrations](https://techcrunch.com/2023/01/05/circleci-breach/). [read more](https://github.com/motdotla/dotenv#-deploying)[m
+[31m-[m
+[31m-### Changed[m
+[31m-[m
+[31m-- Fixed "cannot resolve 'fs'" error on tools like Replit [#693](https://github.com/motdotla/dotenv/pull/693)[m
+[31m-[m
+[31m-## [16.0.3](https://github.com/motdotla/dotenv/compare/v16.0.2...v16.0.3) (2022-09-29)[m
+[31m-[m
+[31m-### Changed[m
+[31m-[m
+[31m-- Added library version to debug logs ([#682](https://github.com/motdotla/dotenv/pull/682))[m
+[31m-[m
+[31m-## [16.0.2](https://github.com/motdotla/dotenv/compare/v16.0.1...v16.0.2) (2022-08-30)[m
+[31m-[m
+[31m-### Added[m
+[31m-[m
+[31m-- Export `env-options.js` and `cli-options.js` in package.json for use with downstream [dotenv-expand](https://github.com/motdotla/dotenv-expand) module[m
+[31m-[m
+[31m-## [16.0.1](https://github.com/motdotla/dotenv/compare/v16.0.0...v16.0.1) (2022-05-10)[m
+[31m-[m
+[31m-### Changed[m
+[31m-[m
+[31m-- Minor README clarifications[m
+[31m-- Development ONLY: updated devDependencies as recommended for development only security risks ([#658](https://github.com/motdotla/dotenv/pull/658))[m
+[31m-[m
+[31m-## [16.0.0](https://github.com/motdotla/dotenv/compare/v15.0.1...v16.0.0) (2022-02-02)[m
+[31m-[m
+[31m-### Added[m
+[31m-[m
+[31m-- _Breaking:_ Backtick support 🎉 ([#615](https://github.com/motdotla/dotenv/pull/615))[m
+[31m-[m
+[31m-If you had values containing the backtick character, please quote those values with either single or double quotes.[m
+[31m-[m
+[31m-## [15.0.1](https://github.com/motdotla/dotenv/compare/v15.0.0...v15.0.1) (2022-02-02)[m
+[31m-[m
+[31m-### Changed[m
+[31m-[m
+[31m-- Properly parse empty single or double quoted values 🐞 ([#614](https://github.com/motdotla/dotenv/pull/614))[m
+[31m-[m
+[31m-## [15.0.0](https://github.com/motdotla/dotenv/compare/v14.3.2...v15.0.0) (2022-01-31)[m
+[31m-[m
+[31m-`v15.0.0` is a major new release with some important breaking changes.[m
+[31m-[m
+[31m-### Added[m
+[31m-[m
+[31m-- _Breaking:_ Multiline parsing support (just works. no need for the flag.)[m
+[31m-[m
+[31m-### Changed[m
+[31m-[m
+[31m-- _Breaking:_ `#` marks the beginning of a comment (UNLESS the value is wrapped in quotes. Please update your `.env` files to wrap in quotes any values containing `#`. For example: `SECRET_HASH="something-with-a-#-hash"`).[m
+[31m-[m
+[31m-..Understandably, (as some teams have noted) this is tedious to do across the entire team. To make it less tedious, we recommend using [dotenv cli](https://github.com/dotenv-org/cli) going forward. It's an optional plugin that will keep your `.env` files in sync between machines, environments, or team members.[m
+[31m-[m
+[31m-### Removed[m
+[31m-[m
+[31m-- _Breaking:_ Remove multiline option (just works out of the box now. no need for the flag.)[m
+[31m-[m
+[31m-## [14.3.2](https://github.com/motdotla/dotenv/compare/v14.3.1...v14.3.2) (2022-01-25)[m
+[31m-[m
+[31m-### Changed[m
+[31m-[m
+[31m-- Preserve backwards compatibility on values containing `#` 🐞 ([#603](https://github.com/motdotla/dotenv/pull/603))[m
+[31m-[m
+[31m-## [14.3.1](https://github.com/motdotla/dotenv/compare/v14.3.0...v14.3.1) (2022-01-25)[m
+[31m-[m
+[31m-### Changed[m
+[31m-[m
+[31m-- Preserve backwards compatibility on exports by re-introducing the prior in-place exports 🐞 ([#606](https://github.com/motdotla/dotenv/pull/606))[m
+[31m-[m
+[31m-## [14.3.0](https://github.com/motdotla/dotenv/compare/v14.2.0...v14.3.0) (2022-01-24)[m
+[31m-[m
+[31m-### Added[m
+[31m-[m
+[31m-- Add `multiline` option 🎉 ([#486](https://github.com/motdotla/dotenv/pull/486))[m
+[31m-[m
+[31m-## [14.2.0](https://github.com/motdotla/dotenv/compare/v14.1.1...v14.2.0) (2022-01-17)[m
+[31m-[m
+[31m-### Added[m
+[31m-[m
+[31m-- Add `dotenv_config_override` cli option[m
+[31m-- Add `DOTENV_CONFIG_OVERRIDE` command line env option[m
+[31m-[m
+[31m-## [14.1.1](https://github.com/motdotla/dotenv/compare/v14.1.0...v14.1.1) (2022-01-17)[m
+[31m-[m
+[31m-### Added[m
+[31m-[m
+[31m-- Add React gotcha to FAQ on README[m
+[31m-[m
+[31m-## [14.1.0](https://github.com/motdotla/dotenv/compare/v14.0.1...v14.1.0) (2022-01-17)[m
+[31m-[m
+[31m-### Added[m
+[31m-[m
+[31m-- Add `override` option 🎉 ([#595](https://github.com/motdotla/dotenv/pull/595))[m
+[31m-[m
+[31m-## [14.0.1](https://github.com/motdotla/dotenv/compare/v14.0.0...v14.0.1) (2022-01-16)[m
+[31m-[m
+[31m-### Added[m
+[31m-[m
+[31m-- Log error on failure to load `.env` file ([#594](https://github.com/motdotla/dotenv/pull/594))[m
+[31m-[m
+[31m-## [14.0.0](https://github.com/motdotla/dotenv/compare/v13.0.1...v14.0.0) (2022-01-16)[m
+[31m-[m
+[31m-### Added[m
+[31m-[m
+[31m-- _Breaking:_ Support inline comments for the parser 🎉 ([#568](https://github.com/motdotla/dotenv/pull/568))[m
+[31m-[m
+[31m-## [13.0.1](https://github.com/motdotla/dotenv/compare/v13.0.0...v13.0.1) (2022-01-16)[m
+[31m-[m
+[31m-### Changed[m
+[31m-[m
+[31m-* Hide comments and newlines from debug output ([#404](https://github.com/motdotla/dotenv/pull/404))[m
+[31m-[m
+[31m-## [13.0.0](https://github.com/motdotla/dotenv/compare/v12.0.4...v13.0.0) (2022-01-16)[m
+[31m-[m
+[31m-### Added[m
+[31m-[m
+[31m-* _Breaking:_ Add type file for `config.js` ([#539](https://github.com/motdotla/dotenv/pull/539))[m
+[31m-[m
+[31m-## [12.0.4](https://github.com/motdotla/dotenv/compare/v12.0.3...v12.0.4) (2022-01-16)[m
+[31m-[m
+[31m-### Changed[m
+[31m-[m
+[31m-* README updates[m
+[31m-* Minor order adjustment to package json format[m
+[31m-[m
+[31m-## [12.0.3](https://github.com/motdotla/dotenv/compare/v12.0.2...v12.0.3) (2022-01-15)[m
+[31m-[m
+[31m-### Changed[m
+[31m-[m
+[31m-* Simplified jsdoc for consistency across editors[m
+[31m-[m
+[31m-## [12.0.2](https://github.com/motdotla/dotenv/compare/v12.0.1...v12.0.2) (2022-01-15)[m
+[31m-[m
+[31m-### Changed[m
+[31m-[m
+[31m-* Improve embedded jsdoc type documentation[m
+[31m-[m
+[31m-## [12.0.1](https://github.com/motdotla/dotenv/compare/v12.0.0...v12.0.1) (2022-01-15)[m
+[31m-[m
+[31m-### Changed[m
+[31m-[m
+[31m-* README updates and clarifications[m
+[31m-[m
+[31m-## [12.0.0](https://github.com/motdotla/dotenv/compare/v11.0.0...v12.0.0) (2022-01-15)[m
+[31m-[m
+[31m-### Removed[m
+[31m-[m
+[31m-- _Breaking:_ drop support for Flow static type checker ([#584](https://github.com/motdotla/dotenv/pull/584))[m
+[31m-[m
+[31m-### Changed[m
+[31m-[m
+[31m-- Move types/index.d.ts to lib/main.d.ts ([#585](https://github.com/motdotla/dotenv/pull/585))[m
+[31m-- Typescript cleanup ([#587](https://github.com/motdotla/dotenv/pull/587))[m
+[31m-- Explicit typescript inclusion in package.json ([#566](https://github.com/motdotla/dotenv/pull/566))[m
+[31m-[m
+[31m-## [11.0.0](https://github.com/motdotla/dotenv/compare/v10.0.0...v11.0.0) (2022-01-11)[m
+[31m-[m
+[31m-### Changed[m
+[31m-[m
+[31m-- _Breaking:_ drop support for Node v10 ([#558](https://github.com/motdotla/dotenv/pull/558))[m
+[31m-- Patch debug option ([#550](https://github.com/motdotla/dotenv/pull/550))[m
+[31m-[m
+[31m-## [10.0.0](https://github.com/motdotla/dotenv/compare/v9.0.2...v10.0.0) (2021-05-20)[m
+[31m-[m
+[31m-### Added[m
+[31m-[m
+[31m-- Add generic support to parse function[m
+[31m-- Allow for import "dotenv/config.js"[m
+[31m-- Add support to resolve home directory in path via ~[m
+[31m-[m
+[31m-## [9.0.2](https://github.com/motdotla/dotenv/compare/v9.0.1...v9.0.2) (2021-05-10)[m
+[31m-[m
+[31m-### Changed[m
+[31m-[m
+[31m-- Support windows newlines with debug mode[m
+[31m-[m
+[31m-## [9.0.1](https://github.com/motdotla/dotenv/compare/v9.0.0...v9.0.1) (2021-05-08)[m
+[31m-[m
+[31m-### Changed[m
+[31m-[m
+[31m-- Updates to README[m
+[31m-[m
+[31m-## [9.0.0](https://github.com/motdotla/dotenv/compare/v8.6.0...v9.0.0) (2021-05-05)[m
+[31m-[m
+[31m-### Changed[m
+[31m-[m
+[31m-- _Breaking:_ drop support for Node v8[m
+[31m-[m
+[31m-## [8.6.0](https://github.com/motdotla/dotenv/compare/v8.5.1...v8.6.0) (2021-05-05)[m
+[31m-[m
+[31m-### Added[m
+[31m-[m
+[31m-- define package.json in exports[m
+[31m-[m
+[31m-## [8.5.1](https://github.com/motdotla/dotenv/compare/v8.5.0...v8.5.1) (2021-05-05)[m
+[31m-[m
+[31m-### Changed[m
+[31m-[m
+[31m-- updated dev dependencies via npm audit[m
+[31m-[m
+[31m-## [8.5.0](https://github.com/motdotla/dotenv/compare/v8.4.0...v8.5.0) (2021-05-05)[m
+[31m-[m
+[31m-### Added[m
+[31m-[m
+[31m-- allow for `import "dotenv/config"`[m
+[31m-[m
+[31m-## [8.4.0](https://github.com/motdotla/dotenv/compare/v8.3.0...v8.4.0) (2021-05-05)[m
+[31m-[m
+[31m-### Changed[m
+[31m-[m
+[31m-- point to exact types file to work with VS Code[m
+[31m-[m
+[31m-## [8.3.0](https://github.com/motdotla/dotenv/compare/v8.2.0...v8.3.0) (2021-05-05)[m
+[31m-[m
+[31m-### Changed[m
+[31m-[m
+[31m-- _Breaking:_ drop support for Node v8 (mistake to be released as minor bump. later bumped to 9.0.0. see above.)[m
+[31m-[m
+[31m-## [8.2.0](https://github.com/motdotla/dotenv/compare/v8.1.0...v8.2.0) (2019-10-16)[m
+[31m-[m
+[31m-### Added[m
+[31m-[m
+[31m-- TypeScript types[m
+[31m-[m
+[31m-## [8.1.0](https://github.com/motdotla/dotenv/compare/v8.0.0...v8.1.0) (2019-08-18)[m
+[31m-[m
+[31m-### Changed[m
+[31m-[m
+[31m-- _Breaking:_ drop support for Node v6 ([#392](https://github.com/motdotla/dotenv/issues/392))[m
+[31m-[m
+[31m-# [8.0.0](https://github.com/motdotla/dotenv/compare/v7.0.0...v8.0.0) (2019-05-02)[m
+[31m-[m
+[31m-### Changed[m
+[31m-[m
+[31m-- _Breaking:_ drop support for Node v6 ([#302](https://github.com/motdotla/dotenv/issues/392))[m
+[31m-[m
+[31m-## [7.0.0] - 2019-03-12[m
+[31m-[m
+[31m-### Fixed[m
+[31m-[m
+[31m-- Fix removing unbalanced quotes ([#376](https://github.com/motdotla/dotenv/pull/376))[m
+[31m-[m
+[31m-### Removed[m
+[31m-[m
+[31m-- Removed `load` alias for `config`
